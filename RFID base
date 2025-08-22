@@ -1,0 +1,79 @@
+#include <SPI.h>
+#include <MFRC522.h>
+
+// Pines para el RFID-RC522
+#define RST_PIN 9
+#define SS_PIN 10
+
+// Pin para el LED
+#define LED_PIN 6
+
+// UID de tu llavero RFID (debes reemplazarlo con el de tu llavero lo que esta despues de 0x (no borres los 0xx ya que estos representan un numero exadecimal))
+byte uidLlavero[] = {0x00, 0x00, 0x00, 0x00};
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);  // Crear instancia MFRC522
+
+void setup() {
+  Serial.begin(9600);    // Inicializar comunicación serial
+  SPI.begin();           // Inicializar bus SPI
+  mfrc522.PCD_Init();    // Inicializar MFRC522
+  
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);  // Iniciar con LED apagado
+  
+  Serial.println("Sistema RFID iniciado");
+  Serial.println("Acerca tu llavero al lector...");
+}
+
+void loop() {
+  // Verificar si hay una tarjeta nueva presente
+  if (!mfrc522.PICC_IsNewCardPresent()) {
+    return;
+  }
+
+  // Seleccionar una de las tarjetas
+  if (!mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  // Mostrar UID en el monitor serial
+  Serial.print("UID de la tarjeta: ");
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(mfrc522.uid.uidByte[i], HEX);
+  }
+  Serial.println();
+
+  // Verificar si es el llavero autorizado
+  if (esLlaveroAutorizado()) {
+    Serial.println("Llavero autorizado detectado - LED ENCENDIDO");
+    digitalWrite(LED_PIN, HIGH);  // Encender LED
+    delay(3000);  // Mantener encendido por 3 segundos
+    digitalWrite(LED_PIN, LOW);   // Apagar LED
+  } else {
+    Serial.println("Tarjeta no autorizada");
+    // Parpadeo rápido para indicar acceso denegado
+    for (int i = 0; i < 3; i++) {
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }
+
+  // Finalizar la lectura de la tarjeta actual
+  mfrc522.PICC_HaltA();
+}
+
+// Función para verificar si es el llavero autorizado
+bool esLlaveroAutorizado() {
+  // Comparar el UID leído con el UID autorizado
+  if (mfrc522.uid.size != 4) return false;
+  
+  for (byte i = 0; i < 4; i++) {
+    if (mfrc522.uid.uidByte[i] != uidLlavero[i]) {
+      return false;
+    }
+  }
+  return true;
+}
