@@ -2,7 +2,16 @@
 
 Para que "funcione" el codigo tienes que poner el id de tu key/tarjeta funciona de cualquier forma pero te mostrara que no esta autorizada para que funcione como debe ingresa los datos de tu key directamente en el script
 
+## NECESARIOS
+* Módulo Lector RFID-RC522 RF y tarjeta.
 
+* 1 Arduino Uno.
+
+* Cables jumper macho a macho.
+
+* Protoboard
+
+* Libreria de RFID en Arduino (En el buscador, escribe "MFRC522")
 
 ## Esquema de coneccion en la board y del RFID-522
 
